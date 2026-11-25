@@ -475,7 +475,8 @@ function compartilhar(){
 }
 
 function aplicarSnapshot(s, permitirAtualizarUrl=false){
- upSec.remove(); btnCross.remove();
+ document.getElementById("upSec")?.remove();
+document.getElementById("btnCross")?.remove();
  viewBanner.classList.remove("hidden");
  viewBanner.innerHTML=`<b>Visualizador atualizado</b> · dados gerados em ${esc(s.geradoEm||"")} a partir de ${esc((s.arquivos||[]).filter(Boolean).join(" e ")||"dados.json")}. Salve esta URL nos Favoritos para sempre ver a versão mais recente.`;
  rows=(s.rows||[]).map(r=>({...r,previsao:r.previsao?new Date(r.previsao):null}));
