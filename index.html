@@ -1,518 +1,231 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Techno Safe · Painel Estoque × Compras</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel Estoque × Pedidos de Compra — TECHNO SAFE</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
- /* ===== Cores Techno Safe (troque aqui se quiser outro tom) ===== */
- :root{--bg:#f4f5f7;--panel:#ffffff;--panel2:#ffffff;--line:#e3e6eb;--txt:#1a1d23;--mut:#6b7280;--head:#f8f9fb;
-  --brand:#d90416;--brand2:#f2401f;--warn:#c98a00;--ok:#16a34a}
- body{background:radial-gradient(1200px 500px at 85% -10%,rgba(227,6,19,.07),transparent 60%),var(--bg);color:var(--txt);font-family:'IBM Plex Sans',system-ui,sans-serif}
- h1,h2,.disp{font-family:'Space Grotesk',sans-serif;letter-spacing:-.01em}
- .mono{font-family:'IBM Plex Mono',monospace}
- .card{background:var(--panel);box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 16px -8px rgba(16,24,40,.08);border:1px solid var(--line);border-radius:16px}
- .mut{color:var(--mut)}
- .btn{border-radius:10px;padding:.55rem 1rem;font-weight:600;transition:.15s;border:1px solid var(--line);background:var(--panel2)}
- .btn:hover{border-color:#c5cad3;background:#f3f4f6}
- .btn-brand{background:linear-gradient(135deg,var(--brand),var(--brand2));border-color:transparent;color:#fff;box-shadow:0 8px 24px -10px var(--brand)}
- .btn-brand:hover{filter:brightness(1.1);background:linear-gradient(135deg,var(--brand),var(--brand2))}
- .btn:disabled{opacity:.35;cursor:not-allowed}
- .kpi{cursor:pointer;transition:.2s;position:relative;overflow:hidden}
- .kpi:hover{transform:translateY(-3px);border-color:#c5cad3}
- .kpi.active{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand),0 12px 30px -15px var(--brand)}
- .kpi::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,#3a4252)}
- .fbtn{border-radius:999px;padding:.35rem .9rem;border:1px solid var(--line);background:transparent;font-size:.85rem}
- .fbtn.active{background:var(--brand);border-color:var(--brand);color:#fff}
- th{position:sticky;top:0;background:var(--head);z-index:1;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);font-weight:600}
- tbody tr{border-top:1px solid var(--line)} tbody tr:hover{background:#fafafb}
- select,input.inp{background:var(--head);border:1px solid var(--line);border-radius:10px;padding:.45rem .7rem;color:var(--txt)}
- input.inp:focus,select:focus{outline:none;border-color:var(--brand)}
- .drop{border:1.5px dashed var(--line);border-radius:12px}
- .pill{padding:.15rem .6rem;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap}
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  :root {
+    --bg:#f4f6f9; --surface:#ffffff; --surface-2:#f8fafc;
+    --ink:#0f172a; --ink-2:#334155; --mut:#64748b;
+    --line:#e2e8f0; --line-strong:#cbd5e1;
+    --accent:#b91c1c; --accent-soft:#fef2f2;
+    --warn:#b45309; --warn-soft:#fffbeb;
+    --ok:#15803d; --ok-soft:#f0fdf4;
+    --info:#1d4ed8; --info-soft:#eff6ff;
+  }
+  * { box-sizing:border-box; }
+  body { font-family:'Inter',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--ink); margin:0; }
+  .mono { font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:12px; }
+  .kpi { position:relative; overflow:hidden; transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
+  .kpi:hover { transform:translateY(-1px); box-shadow:0 6px 18px -6px rgba(15,23,42,.12); }
+  .kpi.active { border-color:var(--ink); box-shadow:0 0 0 2px rgba(15,23,42,.12); }
+  .kpi::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--bar,#94a3b8); }
+  .pill { display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; white-space:nowrap; }
+  .pill-crit { background:var(--accent-soft); color:var(--accent); border:1px solid #fecaca; }
+  .pill-tran { background:var(--warn-soft); color:var(--warn); border:1px solid #fde68a; }
+  .pill-ok   { background:var(--ok-soft); color:var(--ok); border:1px solid #bbf7d0; }
+  .pill-info { background:var(--info-soft); color:var(--info); border:1px solid #bfdbfe; }
+  .pill-mut  { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
+  .dropzone { border:1.5px dashed var(--line-strong); background:var(--surface-2); transition:all .15s ease; }
+  .dropzone.drag { border-color:var(--accent); background:var(--accent-soft); }
+  .dropzone.loaded { border-style:solid; border-color:#86efac; background:#f0fdf4; }
+  th.sortable { cursor:pointer; user-select:none; }
+  th.sortable:hover { color:var(--ink); background:#f1f5f9; }
+  tr.row-crit { background:#fffafa; }
+  tr.row-crit:hover { background:#fef2f2; }
+  tr.row-tran:hover { background:#fffbeb; }
+  tr.row-ok:hover   { background:#f8fafc; }
+  .tbl-wrap { max-height:62vh; overflow:auto; }
+  .tbl-wrap thead th { position:sticky; top:0; z-index:10; background:#f8fafc; border-bottom:1px solid var(--line-strong); }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:8px; font-size:12.5px; font-weight:600; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-2); cursor:pointer; transition:all .12s ease; }
+  .btn:hover:not(:disabled) { background:#f8fafc; border-color:#94a3b8; color:var(--ink); }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+  .btn-primary { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .btn-primary:hover:not(:disabled) { background:#1e293b; }
+  .btn-danger { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .btn-danger:hover:not(:disabled) { background:#991b1b; }
+  .chip { padding:5px 11px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); cursor:pointer; transition:all .12s; }
+  .chip:hover { border-color:#94a3b8; }
+  .chip.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .drawer-backdrop { position:fixed; inset:0; background:rgba(15,23,42,.45); z-index:40; display:none; }
+  .drawer-backdrop.open { display:block; }
+  .drawer { position:fixed; top:0; right:0; bottom:0; width:min(540px,100vw); background:#fff; z-index:50; box-shadow:-12px 0 32px rgba(15,23,42,.18); transform:translateX(100%); transition:transform .2s ease; display:flex; flex-direction:column; }
+  .drawer.open { transform:translateX(0); }
+  @media print { .no-print { display:none !important; } body { background:#fff; } .tbl-wrap { max-height:none; overflow:visible; } .card { border:1px solid #cbd5e1; box-shadow:none; } }
 </style>
 </head>
-<body class="min-h-screen">
-<header class="border-b" style="border-color:var(--line);background:var(--panel)">
- <div class="max-w-[1500px] mx-auto px-4 md:px-8 py-4 flex items-center justify-between gap-4">
-  <div class="flex items-center gap-3">
-   <div class="w-10 h-10 rounded-xl flex items-center justify-center disp font-bold text-white" style="background:linear-gradient(135deg,var(--brand),var(--brand2))">TS</div>
-   <div><div class="disp font-bold text-lg leading-tight">TECHNO <span style="color:var(--brand)">SAFE</span></div>
-   <div class="text-xs mut">Painel Estoque × Pedidos de Compra</div></div>
+<body>
+
+<header class="bg-white border-b border-slate-200 sticky top-0 z-30 no-print">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-8 h-8 rounded-lg bg-red-700 text-white font-extrabold text-xs flex items-center justify-center tracking-tight shrink-0">TS</div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-sm sm:text-base tracking-tight truncate">TECHNO SAFE</span>
+          <span class="hidden md:inline-block text-xs text-slate-400">·</span>
+          <span class="hidden md:inline text-xs text-slate-500 truncate">Painel Estoque × Pedidos de Compra</span>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span id="statusBadge" class="pill pill-mut">Aguardando arquivos</span>
+      <button id="btnSyncUrl" class="btn hidden" title="Buscar dados.json atualizado no servidor">🔄 Atualizar dados</button>
+      <button id="btnCross" class="btn btn-primary" disabled title="Cruzar PDV com Pedidos de Compra">⚡ Cruzar Dados</button>
+      <button id="btnExport" class="btn" disabled title="Exportar visão filtrada para Excel">📊 Exportar Excel</button>
+      <button id="btnPrint" class="btn hidden sm:inline-flex" disabled title="Imprimir / Salvar PDF">🖨️</button>
+    </div>
   </div>
-  <div class="flex items-center gap-3">
-   <button onclick="atualizarRemoto()" id="btnSyncUrl" class="btn hidden">🔄 Atualizar dados</button>
-   <div class="text-xs mut hidden md:block">🔒 Painel Estoque × Compras · PDV &amp; Pedidos em Aberto</div>
-  </div>
- </div>
 </header>
-<main class="max-w-[1500px] mx-auto px-4 md:px-8 py-6">
 
-<div id="viewBanner" class="hidden card p-4 mb-5 text-sm"></div>
+<main class="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 space-y-5">
 
-<section id="upSec" class="mb-5">
- <div class="card p-4 mb-4 flex flex-wrap items-center justify-between gap-3">
-  <div class="text-sm">
-   <span class="font-semibold">Pasta monitorada:</span>
-   <span id="folderStatus" class="mut">Nenhuma pasta vinculada (opcional)</span>
-  </div>
-  <div class="flex flex-wrap items-center gap-2">
-   <button onclick="vincularPasta()" id="btnFolder" class="btn">📁 Vincular pasta</button>
-   <button onclick="atualizarTudo()" id="btnRefresh" class="btn">🔄 Atualizar dados</button>
-   <button onclick="limparSalvos()" id="btnClear" class="btn">🗑️ Limpar salvos</button>
-  </div>
- </div>
+  <div id="viewBanner" class="hidden rounded-lg border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs text-blue-900 flex items-center justify-between gap-2 no-print"></div>
 
- <div class="grid md:grid-cols-2 gap-4">
-  <div class="card p-5">
-   <div class="flex items-center justify-between mb-3"><h2 class="font-bold">01 · Pedidos de Venda (PDV)</h2><span class="text-xs mut">Estoque / Demanda / Bloqueios</span></div>
-   <input type="file" id="file1" accept=".xlsx,.xls,.csv" class="hidden">
-   <div class="drop p-4 flex items-center justify-between gap-3">
-    <div id="name1" class="text-sm mut">Nenhum arquivo carregado</div>
-    <button onclick="file1.click()" id="btn1" class="btn">Importar planilha</button>
-   </div>
-   <div id="map1" class="mt-3"></div>
-  </div>
-  <div class="card p-5">
-   <div class="flex items-center justify-between mb-3"><h2 class="font-bold">02 · Pedidos de Compra</h2><span class="text-xs mut">Em trânsito</span></div>
-   <input type="file" id="file2" accept=".xlsx,.xls,.csv" class="hidden">
-   <div class="drop p-4 flex items-center justify-between gap-3">
-    <div id="name2" class="text-sm mut">Nenhum arquivo carregado</div>
-    <button onclick="file2.click()" id="btn2" class="btn">Importar planilha</button>
-   </div>
-   <div id="map2" class="mt-3"></div>
-  </div>
- </div>
-</section>
+  <section id="upSec" class="grid grid-cols-1 md:grid-cols-2 gap-4 no-print">
+    <div id="dzPdv" class="dropzone rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer">
+      <div class="flex items-center gap-3.5 min-w-0">
+        <div class="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-lg shrink-0">📦</div>
+        <div class="min-w-0">
+          <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">1. Carteira & Estoque (PDV)</div>
+          <div id="lblPdv" class="text-sm font-semibold text-slate-800 truncate">Arraste a planilha PDV aqui ou clique para escolher</div>
+          <div id="metaPdv" class="text-xs text-slate-500 truncate mt-0.5">Aceita .xlsx, .xls ou .csv · Saldo, Empenho e Pedidos em Aberto</div>
+        </div>
+      </div>
+      <span id="tagPdv" class="pill pill-mut shrink-0">Pendente</span>
+      <input id="filePdv" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
+    </div>
 
-<div id="crossBar" class="mb-6 flex flex-wrap items-center gap-3">
- <button id="btnCross" onclick="cruzar()" class="btn btn-brand px-6" disabled>Cruzar dados →</button>
- <span id="msg" class="text-sm" style="color:var(--warn)"></span>
- <button id="btnShare" onclick="compartilhar()" class="btn hidden">Gerar visualizador para compartilhar</button>
- <span id="info" class="text-xs mut"></span>
-</div>
+    <div id="dzPc" class="dropzone rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer">
+      <div class="flex items-center gap-3.5 min-w-0">
+        <div class="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-lg shrink-0">🛒</div>
+        <div class="min-w-0">
+          <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">2. Pedidos de Compra em Aberto (PC)</div>
+          <div id="lblPc" class="text-sm font-semibold text-slate-800 truncate">Arraste a planilha de Compras aqui ou clique para escolher</div>
+          <div id="metaPc" class="text-xs text-slate-500 truncate mt-0.5">Aceita .xlsx, .xls ou .csv · Qtd. Pendente e Previsão de Entrega</div>
+        </div>
+      </div>
+      <span id="tagPc" class="pill pill-mut shrink-0">Pendente</span>
+      <input id="filePc" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
+    </div>
+  </section>
 
-<section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
- <div class="card kpi p-5" data-f="TODOS" style="--c:#64748b"><div class="text-xs uppercase tracking-wider mut">Total analisados</div><div id="kTot" class="disp text-4xl font-bold mt-1">0</div></div>
- <div class="card kpi p-5" data-f="CRITICO" style="--c:var(--brand)"><div class="text-xs uppercase tracking-wider mut">Crítico · comprar</div><div id="kCri" class="disp text-4xl font-bold mt-1" style="color:var(--brand2)">0</div></div>
- <div class="card kpi p-5" data-f="TRANSITO" style="--c:var(--warn)"><div class="text-xs uppercase tracking-wider mut">Em trânsito</div><div id="kTra" class="disp text-4xl font-bold mt-1" style="color:var(--warn)">0</div></div>
- <div class="card kpi p-5" data-f="OK" style="--c:var(--ok)"><div class="text-xs uppercase tracking-wider mut">OK · atendido</div><div id="kOk" class="disp text-4xl font-bold mt-1" style="color:var(--ok)">0</div></div>
-</section>
+  <div id="alertBox" class="hidden rounded-xl border px-4 py-3 text-xs sm:text-sm"></div>
 
-<section class="card p-4">
- <div class="flex flex-wrap gap-2 items-center mb-4">
-  <button class="fbtn" data-f="TODOS">Todos</button>
-  <button class="fbtn" data-f="CRITICO">Crítico</button>
-  <button class="fbtn" data-f="TRANSITO">Em Trânsito</button>
-  <button class="fbtn" data-f="OK">OK</button>
-  <select id="fBloq">
-   <option value="">Todos os bloqueios</option>
-   <option value="BLOQUEADO">Com bloqueio</option>
-   <option value="LIVRE">Sem bloqueio</option>
-  </select>
-  <select id="fMarca"><option value="">Todas as marcas</option></select>
-  <input id="busca" placeholder="Buscar código, PDV, PC, bloqueio ou marca..." class="inp flex-1 min-w-[220px]">
-  <button onclick="exportarFiltro()" class="btn">Exportar Excel</button>
-  <button onclick="enviarCompras()" class="btn btn-brand">Enviar para Compras</button>
- </div>
- <div class="overflow-auto max-h-[65vh] rounded-lg">
-  <table class="w-full text-sm">
-   <thead><tr class="text-left">
-    <th class="p-2">Código</th><th class="p-2">Descrição</th><th class="p-2">Marca</th><th class="p-2 text-center">Saldo Atual</th><th class="p-2">Status</th>
-    <th class="p-2 text-center">Ped. Venda (PDV)</th><th class="p-2">Ped. Compra (PC)</th><th class="p-2">Bloqueio</th><th class="p-2 text-right">Qtd. Comprada</th>
-    <th class="p-2 text-right">Qtd. Sugerida</th><th class="p-2">Previsão</th><th class="p-2">Ação</th></tr></thead>
-   <tbody id="tbody"><tr><td colspan="12" class="p-8 text-center mut">Importe as duas planilhas e clique em "Cruzar dados".</td></tr></tbody>
-   <tfoot><tr class="font-bold" style="background:var(--head)"><td class="p-2" colspan="9">TOTAL (<span id="fCount">0</span> itens filtrados)</td><td class="p-2 text-right" id="fTotal">0</td><td colspan="2"></td></tr></tfoot>
-  </table>
- </div>
-</section>
+  <section id="kpiSec" class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+    <div class="card kpi p-4 cursor-pointer" data-filter="ALL" style="--bar:#0f172a">
+      <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Analisados</div>
+      <div id="kTotal" class="mono text-2xl sm:text-3xl font-bold text-slate-900 mt-1">—</div>
+      <div id="kTotalSub" class="text-xs text-slate-500 mt-1">Aguardando cruzamento</div>
+    </div>
+    <div class="card kpi p-4 cursor-pointer" data-filter="CRITICO" style="--bar:#dc2626">
+      <div class="text-[11px] font-bold uppercase tracking-wider text-red-700">Crítico · Comprar</div>
+      <div id="kCrit" class="mono text-2xl sm:text-3xl font-bold text-red-700 mt-1">—</div>
+      <div id="kCritSub" class="text-xs text-slate-500 mt-1">Saldo insuficiente e sem PC</div>
+    </div>
+    <div class="card kpi p-4 cursor-pointer" data-filter="TRANSITO" style="--bar:#d97706">
+      <div class="text-[11px] font-bold uppercase tracking-wider text-amber-700">Em Trânsito</div>
+      <div id="kTran" class="mono text-2xl sm:text-3xl font-bold text-amber-700 mt-1">—</div>
+      <div id="kTranSub" class="text-xs text-slate-500 mt-1">Coberto por pedido de compra</div>
+    </div>
+    <div class="card kpi p-4 cursor-pointer" data-filter="OK" style="--bar:#16a34a">
+      <div class="text-[11px] font-bold uppercase tracking-wider text-green-700">OK · Atendido</div>
+      <div id="kOk" class="mono text-2xl sm:text-3xl font-bold text-green-700 mt-1">—</div>
+      <div id="kOkSub" class="text-xs text-slate-500 mt-1">Estoque disponível cobre a saída</div>
+    </div>
+  </section>
+
+  <section class="card p-3.5 sm:p-4 space-y-3 no-print">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex flex-wrap items-center gap-1.5" id="statusChips">
+        <button class="chip active" data-status="ALL">Todos</button>
+        <button class="chip" data-status="CRITICO">Crítico</button>
+        <button class="chip" data-status="TRANSITO">Em Trânsito</button>
+        <button class="chip" data-status="OK">OK</button>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 flex-1 sm:flex-initial justify-end">
+        <select id="selBloqueio" class="btn mono text-xs py-1.5">
+          <option value="ALL">Todos os bloqueios</option>
+        </select>
+        <select id="selMarca" class="btn text-xs py-1.5 max-w-[200px]">
+          <option value="ALL">Todas as marcas</option>
+        </select>
+        <input id="txtBusca" type="search" placeholder="Buscar código, PDV, PC, bloqueio ou marca..." class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm w-full sm:w-72 focus:outline-none focus:border-slate-700" />
+      </div>
+    </div>
+
+    <div id="actionBar" class="hidden flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-slate-100">
+      <div class="flex items-center gap-2 text-xs text-slate-600">
+        <span id="selCount" class="font-semibold text-slate-900">0 selecionados</span>
+        <span>·</span>
+        <button id="btnSelectCrit" class="underline hover:text-slate-900">Selecionar todos os Críticos visíveis</button>
+        <span>·</span>
+        <button id="btnClearSel" class="underline hover:text-slate-900">Limpar seleção</button>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btnReqCompra" class="btn btn-danger text-xs py-1.5" disabled>📋 Gerar Requisição de Compra (<span id="reqQtd">0</span>)</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card overflow-hidden">
+    <div class="px-4 py-2.5 border-b border-slate-200 bg-slate-50/70 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+      <div id="tblResumo">Nenhum dado carregado ainda.</div>
+      <div id="tblDica" class="text-slate-400">Clique em uma linha para ver o detalhe de estoque, PDVs e pedidos de compra</div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="text-[11px] font-bold uppercase tracking-wider text-slate-500 select-none">
+            <th class="py-2.5 pl-3 pr-1 w-8 no-print"><input id="chkAll" type="checkbox" class="rounded border-slate-300" /></th>
+            <th class="py-2.5 px-2.5 sortable" data-col="codigo">Código ↕</th>
+            <th class="py-2.5 px-2.5 sortable" data-col="descricao">Descrição ↕</th>
+            <th class="py-2.5 px-2.5 sortable" data-col="marca">Marca ↕</th>
+            <th class="py-2.5 px-2.5 text-right sortable" data-col="saldo">Saldo ↕</th>
+            <th class="py-2.5 px-2.5 sortable" data-col="statusOrd">Status ↕</th>
+            <th class="py-2.5 px-2.5 sortable" data-col="pdvStr">Ped. Venda (PDV) ↕</th>
+            <th class="py-2.5 px-2.5 sortable" data-col="pcStr">Ped. Compra ↕</th>
+            <th class="py-2.5 px-2.5 sortable" data-col="bloqueio">Bloqueio ↕</th>
+            <th class="py-2.5 px-2.5 text-right sortable" data-col="qtdSaida">Qtd. Saída ↕</th>
+            <th class="py-2.5 px-2.5 text-right sortable" data-col="qtdPendPc">Qtd. Pend. PC ↕</th>
+            <th class="py-2.5 px-2.5 sortable" data-col="previsao">Previsão ↕</th>
+            <th class="py-2.5 pl-2.5 pr-3 sortable" data-col="acao">Ação ↕</th>
+          </tr>
+        </thead>
+        <tbody id="tbody" class="divide-y divide-slate-100 text-xs sm:text-[13px]">
+          <tr>
+            <td colspan="13" class="py-14 text-center text-slate-400">
+              Carregue as planilhas de <strong>PDV</strong> e <strong>Pedidos de Compra</strong> acima (ou clique em <strong>Cruzar Dados</strong> após selecionar os arquivos).
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
 </main>
 
-<script>window.SNAPSHOT=null;</script>
-<script>
-const TEMPLATE=document.documentElement.outerHTML;
-const STORAGE_KEY="TECHNO_SAFE_PAINEL_V4_STATE";
-const DADOS_JSON_URL="./dados.json";
+<div id="drawerBg" class="drawer-backdrop no-print"></div>
+<aside id="drawer" class="drawer no-print" aria-label="Detalhes do item">
+  <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-3">
+    <div>
+      <div id="drwCod" class="mono text-xs font-bold text-slate-500"></div>
+      <h2 id="drwDesc" class="text-base font-bold text-slate-900 leading-snug"></h2>
+    </div>
+    <button id="drwClose" class="btn py-1 px-2.5">✕</button>
+  </div>
+  <div id="drwBody" class="p-5 overflow-y-auto space-y-5 flex-1 text-sm"></div>
+</aside>
 
-/* ====== CONFIGURE AQUI OS NOMES EXATOS DAS COLUNAS ====== */
-const CONFIG = {
- p1: {
-  sku:"COD ITEM", desc:"DESC TECNICA", saldo:"ESTOQUE", demanda:"QTDE SLDO PDV",
-  pdv:"PEDIDO", situacao:"SITUACAO ITEM", ordem:"ID", marca:"MARCA", grupo:"GRP INVENTARIO",
-  sitEng:"SIT ENG", sitProc:"SIT PROC", sitFat:"SIT FAT",
-  sitFatCom:"SIT FAT COM", sitFatFin:"SIT FAT FIN",
-  sitPdvCom:"SIT PDV COM", sitPdvFin:"SIT PDV FIN"
- },
- p2: { sku:"ITEM", pedido:"PEDIDO", qtd:"QTDE", atendida:"QTDE ATENDIDA", cancelada:"QTDE CANCELADA", data:"DT ENTREGA", status:"POSICAO" }
-};
-const PASTA_HINTS = {
- p1: ["PDV", "VENDA", "ESTOQUE", "DEMANDA"],
- p2: ["COMPRA", "PC", "PEDIDO", "TRANSITO", "TRÂNSITO"]
-};
-const BLOQUEIO_COLS = ["sitEng","sitProc","sitFat","sitFatCom","sitFatFin","sitPdvCom","sitPdvFin"];
-const VALORES_LIBERADOS = ["OK","LIB","LIBERADO","NORMAL","N","NAO","NÃO","0","-",""];
-const BLOQUEIO_PALAVRAS = ["BLOQ","SUSP","REPROV","PEND","TRAV","RETID"];
-const OPCIONAIS = [
- "pdv","situacao","ordem","marca","grupo",
- "sitEng","sitProc","sitFat","sitFatCom","sitFatFin","sitPdvCom","sitPdvFin",
- "atendida","cancelada","status"
-];
-const SITUACAO_IGNORAR = ["FATURADO","CANCELAD"];
-const SO_COM_DEMANDA = true;
-const GRUPOS_EXCLUIR = ["PRODUTO EM PROCESSO","PRODUTO ACABADO","GENERICO","ATIVO IMOBILIZADO"];
-const STATUS_FECHADO = ["ENCERRAD","CANCELAD","RECEBID","FINALIZAD","ATENDIDO TOTAL","CONCLUID","BAIXAD","FECHAD","ENTREGUE"];
-/* ======================================================== */
-
-const LABELS = {
- p1:{
-  sku:"Código do Item / SKU",desc:"Descrição do Produto",saldo:"Saldo Atual (estoque)",demanda:"Demanda (saldo a atender)",
-  pdv:"Nº Pedido de Venda (opcional)",situacao:"Situação do item (opcional)",ordem:"Ordem / mais recente (opcional)",
-  marca:"Marca (opcional)",grupo:"Grupo de inventário (opcional)",
-  sitEng:"SIT ENG (opcional)",sitProc:"SIT PROC (opcional)",sitFat:"SIT FAT (opcional)",
-  sitFatCom:"SIT FAT COM (opcional)",sitFatFin:"SIT FAT FIN (opcional)",
-  sitPdvCom:"SIT PDV COM (opcional)",sitPdvFin:"SIT PDV FIN (opcional)"
- },
- p2:{sku:"Código do Item / SKU",pedido:"Nº do Pedido de Compra",qtd:"Quantidade Comprada",atendida:"Qtd. já recebida (opcional)",cancelada:"Qtd. cancelada (opcional)",data:"Previsão de Entrega",status:"Status do Pedido (opcional)"}
-};
-const HINTS = {
- sku:["COD","SKU","ITEM","PRODUTO"], desc:["DESCR"], saldo:["SALDO","ESTOQUE"], demanda:["DEMANDA","NECESS"],
- pdv:["PDV","PEDIDO","VENDA","NR_PEDIDO","NRO_PEDIDO"],
- pedido:["PEDIDO","PC","NUM"], qtd:["QTD","QUANT"], data:["PREV","ENTREGA","DATA","DT"], status:["STATUS","SITUA","POSICAO"],
- situacao:["SITUACAO ITEM"], ordem:["ID"], marca:["MARCA"], grupo:["GRP INVENT","GRUPO"],
- sitEng:["SIT ENG"], sitProc:["SIT PROC"], sitFat:["SIT FAT"],
- sitFatCom:["SIT FAT COM"], sitFatFin:["SIT FAT FIN"],
- sitPdvCom:["SIT PDV COM"], sitPdvFin:["SIT PDV FIN"],
- atendida:["ATENDID"], cancelada:["CANCEL"]
-};
-const data = { p1:null, p2:null };
-let rows = [], filtro = "TODOS", dirHandle = null;
-
-const norm = s => String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase();
-const key = v => String(v??"").trim().replace(/\.0+$/,"").toUpperCase();
-function num(v){ if(typeof v==="number") return v; let s=String(v??"").trim(); if(!s) return 0;
- if(s.includes(",")) s=s.replace(/\./g,"").replace(",","."); const n=parseFloat(s.replace(/[^\d.\-]/g,"")); return isNaN(n)?0:n; }
-function toDate(v){ if(v instanceof Date) return v; if(typeof v==="number") return new Date(Math.round((v-25569)*864e5)+12*36e5);
- const s=String(v??"").trim(); const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/); if(m) return new Date(+(m[3].length==2?"20"+m[3]:m[3]),m[2]-1,+m[1]);
- const d=new Date(s); return isNaN(d)?null:d; }
-const fmtD = d => d? d.toLocaleDateString("pt-BR"):"";
-const fmtN = n => Number(n||0).toLocaleString("pt-BR",{maximumFractionDigits:2});
-const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-
-function avaliarBloqueioLinha(r, m1){
- const detalhes = [];
- const liberadosNorm = VALORES_LIBERADOS.map(norm);
- for(const colKey of BLOQUEIO_COLS){
-  const colName = m1[colKey];
-  if(!colName) continue;
-  const valRaw = String(r[colName] ?? "").trim();
-  const nVal = norm(valRaw);
-  if(liberadosNorm.includes(nVal)) continue;
-  const temPalavraBloq = BLOQUEIO_PALAVRAS.some(p => nVal.includes(norm(p)));
-  const naoEhLiberado = !liberadosNorm.some(l => l && (nVal === l || nVal.startsWith(l + " ") || nVal.startsWith(l + "-")));
-  if(temPalavraBloq || naoEhLiberado){
-   detalhes.push(`${colName}: ${valRaw}`);
-  }
- }
- return detalhes;
-}
-
-function salvarEstadoLocal(){
- try{
-  const payload = {
-   salvoEm: new Date().toLocaleString("pt-BR"),
-   data: {
-    p1: data.p1 ? {file:data.p1.file, json:data.p1.json, cols:data.p1.cols, map:data.p1.map} : null,
-    p2: data.p2 ? {file:data.p2.file, json:data.p2.json, cols:data.p2.cols, map:data.p2.map} : null
-   },
-   rows: rows.map(r=>({...r, previsao: r.previsao ? new Date(r.previsao).toISOString() : null})),
-   exclCount: +(info.textContent.match(/^\d+/)||[0])[0]
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
- }catch(e){ console.warn("Não foi possível salvar no localStorage:", e); }
-}
-
-function carregarEstadoLocal(){
- try{
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(!raw) return false;
-  const s = JSON.parse(raw);
-  if(s.data?.p1){
-   data.p1 = s.data.p1;
-   document.getElementById("name1").innerHTML=`💾 <b>${esc(data.p1.file)}</b> — ${data.p1.json.length} linhas, ${data.p1.cols.length} colunas <span class="mut">(salvo em ${esc(s.salvoEm||"")})</span>`;
-   document.getElementById("btn1").textContent="🔄 Trocar arquivo";
-   renderMap("p1");
-  }
-  if(s.data?.p2){
-   data.p2 = s.data.p2;
-   document.getElementById("name2").innerHTML=`💾 <b>${esc(data.p2.file)}</b> — ${data.p2.json.length} linhas, ${data.p2.cols.length} colunas <span class="mut">(salvo em ${esc(s.salvoEm||"")})</span>`;
-   document.getElementById("btn2").textContent="🔄 Trocar arquivo";
-   renderMap("p2");
-  }
-  check();
-  if(Array.isArray(s.rows) && s.rows.length){
-   rows = s.rows.map(r=>({...r, previsao: r.previsao ? new Date(r.previsao) : null}));
-   finalizar(s.exclCount || 0, false);
-  }
-  return true;
- }catch(e){ return false; }
-}
-
-function limparSalvos(){
- localStorage.removeItem(STORAGE_KEY);
- data.p1 = null; data.p2 = null; rows = [];
- document.getElementById("name1").textContent = "Nenhum arquivo carregado";
- document.getElementById("name2").textContent = "Nenhum arquivo carregado";
- document.getElementById("btn1").textContent = "Importar planilha";
- document.getElementById("btn2").textContent = "Importar planilha";
- document.getElementById("map1").innerHTML = "";
- document.getElementById("map2").innerHTML = "";
- kTot.textContent = kCri.textContent = kTra.textContent = kOk.textContent = "0";
- tbody.innerHTML = '<tr><td colspan="12" class="p-8 text-center mut">Importe as duas planilhas e clique em "Cruzar dados".</td></tr>';
- fCount.textContent = "0"; fTotal.textContent = "0"; info.textContent = "";
- btnShare.classList.add("hidden");
- check();
-}
-
-function processarArrayBuffer(buf, fileName, p){
- const wb = XLSX.read(buf, {type:"array", cellDates:true});
- const ws = wb.Sheets[wb.SheetNames[0]];
- const json = XLSX.utils.sheet_to_json(ws, {defval:"", raw:true});
- if(!json.length) throw new Error("Planilha vazia");
- const cols = Object.keys(json[0]);
- const prevMap = data[p]?.map ? Object.fromEntries(Object.entries(data[p].map).map(([k,v])=>[k,v.col])) : {};
- const map = {};
- for(const f in CONFIG[p]){
-  const want = norm(prevMap[f] || CONFIG[p][f]);
-  let c = cols.find(col=>norm(col)===want) || (OPCIONAIS.includes(f) ? "" : cols.find(col=>HINTS[f].some(h=>norm(col).includes(h)) && !Object.values(map).some(x=>x.col===col)));
-  map[f] = {col: c||"", exact: cols.some(col=>norm(col)===want)};
- }
- data[p] = {file:fileName, json, cols, map};
- const n = p==="p1" ? 1 : 2;
- document.getElementById("name"+n).innerHTML = `✅ <b>${esc(fileName)}</b> — ${json.length} linhas, ${cols.length} colunas`;
- document.getElementById("btn"+n).textContent = "🔄 Trocar arquivo";
- renderMap(p);
- salvarEstadoLocal();
-}
-
-function readFile(file, p){
- const r = new FileReader();
- r.onload = e => {
-  try{ processarArrayBuffer(e.target.result, file.name, p); }
-  catch(err){ alert("Erro ao ler o arquivo: " + err.message); }
- };
- r.readAsArrayBuffer(file);
-}
-
-async function vincularPasta(){
- if(!window.showDirectoryPicker){
-  alert("Seu navegador não suporta vínculo direto de pasta. Use o botão 'Importar planilha' ou 'Atualizar dados'.");
-  return;
- }
- try{
-  dirHandle = await window.showDirectoryPicker({mode:"read"});
-  document.getElementById("folderStatus").innerHTML = `✅ <b>${esc(dirHandle.name)}</b>`;
-  await lerArquivosDaPasta(true);
- }catch(err){
-  if(err.name !== "AbortError") alert("Erro ao acessar pasta: " + err.message);
- }
-}
-
-async function lerArquivosDaPasta(cruzarApos){
- if(!dirHandle) return;
- const perm = await dirHandle.queryPermission({mode:"read"});
- if(perm !== "granted"){
-  const req = await dirHandle.requestPermission({mode:"read"});
-  if(req !== "granted") return;
- }
- const arquivos = [];
- for await (const [name, handle] of dirHandle.entries()){
-  if(handle.kind === "file" && /\.(xlsx|xls|csv)$/i.test(name)){
-   const f = await handle.getFile();
-   arquivos.push({name, file:f, lastModified:f.lastModified});
-  }
- }
- arquivos.sort((a,b)=>b.lastModified - a.lastModified);
- const pick = (hints) => arquivos.find(a=>hints.some(h=>norm(a.name).includes(norm(h))));
- const f1 = pick(PASTA_HINTS.p1) || arquivos[0];
- const f2 = pick(PASTA_HINTS.p2) || arquivos.find(a=>a!==f1);
-
- if(f1) processarArrayBuffer(await f1.file.arrayBuffer(), f1.name, "p1");
- if(f2) processarArrayBuffer(await f2.file.arrayBuffer(), f2.name, "p2");
- if(cruzarApos && !btnCross.disabled) cruzar();
-}
-
-async function atualizarTudo(){
- if(dirHandle){
-  await lerArquivosDaPasta(true);
-  return;
- }
- if(!btnCross.disabled){
-  cruzar();
-  return;
- }
- alert("Importe as duas planilhas ou vincule uma pasta para atualizar.");
-}
-
-function renderMap(p){
- const d=data[p], n=p==="p1"?1:2, allExact=Object.entries(d.map).every(([f,m])=>m.exact||OPCIONAIS.includes(f));
- let h=`<div class="text-xs ${allExact?"text-green-700":"text-amber-700"} mb-2">${allExact?"Todas as colunas encontradas. Confira se quiser:":"⚠️ Algumas colunas não foram encontradas com o nome exato. Confirme abaixo:"}</div><div class="grid md:grid-cols-2 gap-2">`;
- for(const f in d.map){ const m=d.map[f];
-  h+=`<label class="flex justify-between items-center gap-2 text-xs"><span>${m.exact?"✅":OPCIONAIS.includes(f)?"➖":"⚠️"} ${LABELS[p][f]} <span class="mut">(${esc(CONFIG[p][f])})</span></span>
-  <select onchange="data.${p}.map.${f}.col=this.value;check();salvarEstadoLocal()"><option value="">— selecione —</option>${d.cols.map(c=>`<option ${c===m.col?"selected":""} value="${esc(c)}">${esc(c)}</option>`).join("")}</select></label>`; }
- document.getElementById("map"+n).innerHTML=h+"</div>"; check();
-}
-function check(){
- const ok=["p1","p2"].every(p=>data[p]&&Object.entries(data[p].map).every(([f,m])=>m.col||OPCIONAIS.includes(f)));
- btnCross.disabled=!ok; msg.textContent=ok?"":(data.p1&&data.p2?"Selecione todas as colunas para cruzar.":"");
-}
-file1.onchange=e=>{ if(e.target.files[0]) readFile(e.target.files[0],"p1"); e.target.value=""; };
-file2.onchange=e=>{ if(e.target.files[0]) readFile(e.target.files[0],"p2"); e.target.value=""; };
-
-function cruzar(){
- const m1=Object.fromEntries(Object.entries(data.p1.map).map(([k,v])=>[k,v.col]));
- const m2=Object.fromEntries(Object.entries(data.p2.map).map(([k,v])=>[k,v.col]));
- const ped={};
- for(const r of data.p2.json){ const k=key(r[m2.sku]); if(!k) continue;
-  const st=m2.status?norm(r[m2.status]):""; if(st&&STATUS_FECHADO.some(s=>st.includes(s))) continue;
-  const aberto=num(r[m2.qtd])-(m2.atendida?num(r[m2.atendida]):0)-(m2.cancelada?num(r[m2.cancelada]):0);
-  if(aberto<=0) continue;
-  const g=ped[k]??={nums:new Set(),qtd:0,data:null};
-  if(String(r[m2.pedido]).trim()) g.nums.add(String(r[m2.pedido]).trim());
-  g.qtd+=aberto; const d=toDate(r[m2.data]); if(d&&(!g.data||d<g.data)) g.data=d; }
-
- const est={}; let excl=new Set();
- const gExc=GRUPOS_EXCLUIR.map(norm);
- data.p1.json.forEach((r,i)=>{ const k=key(r[m1.sku]); if(!k) return;
-  if(m1.grupo&&gExc.includes(norm(r[m1.grupo]))){excl.add(k);return;}
-  const sit=m1.situacao?norm(r[m1.situacao]):"";
-  const g=est[k]??={cod:String(r[m1.sku]).trim(),desc:r[m1.desc],marca:"",saldo:0,demanda:0,_o:-Infinity,pdvs:new Set(),bloqs:new Set()};
-  if(!g.marca&&m1.marca) g.marca=String(r[m1.marca]??"").trim();
-  const o=m1.ordem?num(r[m1.ordem]):i; if(o>=g._o){g._o=o; g.saldo=num(r[m1.saldo]);}
-  if(!SITUACAO_IGNORAR.some(s=>sit.includes(s))){
-   g.demanda+=Math.max(0,num(r[m1.demanda]));
-   if(m1.pdv && String(r[m1.pdv]??"").trim()) g.pdvs.add(String(r[m1.pdv]).trim());
-   for(const b of avaliarBloqueioLinha(r, m1)) g.bloqs.add(b);
-  }
-  if(!g.desc) g.desc=r[m1.desc]; });
-
- if(SO_COM_DEMANDA) for(const k in est) if(est[k].demanda<=0) delete est[k];
- rows=Object.entries(est).map(([k,e])=>{
-  const sem=e.saldo<e.demanda||(e.saldo<=0&&e.demanda>0), p=ped[k];
-  const status=!sem?"OK":(p?"TRANSITO":"CRITICO");
-  const bloqLista=[...e.bloqs];
-  return {...e,status,
-   pedidoPdv:[...e.pdvs].join(", "),
-   pedido:p?[...p.nums].join(", "):"",
-   bloqueado:bloqLista.length>0,
-   bloqueioDetalhe:bloqLista.join(" | "),
-   qtdComprada:p?p.qtd:"",previsao:p?p.data:null,
-   sugerida:status==="OK"?null:Math.max(0,e.demanda-e.saldo)};
- });
- finalizar(excl.size, true);
-}
-function finalizar(nExcl, salvar=true){
- const ord={CRITICO:0,TRANSITO:1,OK:2}; rows.sort((a,b)=>ord[a.status]-ord[b.status]||String(a.cod).localeCompare(String(b.cod)));
- kTot.textContent=rows.length; kCri.textContent=rows.filter(r=>r.status==="CRITICO").length;
- kTra.textContent=rows.filter(r=>r.status==="TRANSITO").length; kOk.textContent=rows.filter(r=>r.status==="OK").length;
- const marcas=[...new Set(rows.map(r=>r.marca).filter(Boolean))].sort();
- fMarca.innerHTML='<option value="">Todas as marcas</option><option value="__SEM__">(Sem marca)</option>'+marcas.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join("");
- info.textContent=nExcl?`${nExcl} itens ignorados por grupo de inventário (${GRUPOS_EXCLUIR.join(", ")}).`:"";
- btnShare.classList.remove("hidden");
- setFiltro("TODOS");
- if(salvar) salvarEstadoLocal();
-}
-const BADGE={CRITICO:'<span class="pill" style="background:rgba(227,6,19,.18);color:#c20312">● Crítico</span>',
- TRANSITO:'<span class="pill" style="background:rgba(245,179,1,.15);color:#9a6a00">● Em Trânsito</span>',
- OK:'<span class="pill" style="background:rgba(34,197,94,.15);color:#15803d">● OK</span>'};
-const ACAO={CRITICO:"Comprar urgente",TRANSITO:"Acompanhar entrega",OK:"—"};
-const STXT={CRITICO:"Crítico",TRANSITO:"Em Trânsito",OK:"OK"};
-
-function filtrados(){
- const q=norm(busca.value), mk=fMarca.value, blq=fBloq.value;
- return rows.filter(r=>
-  (filtro==="TODOS"||r.status===filtro) &&
-  (!blq || (blq==="BLOQUEADO" ? r.bloqueado : !r.bloqueado)) &&
-  (!mk||(mk==="__SEM__"?!r.marca:r.marca===mk)) &&
-  (!q||norm(r.cod).includes(q)||norm(r.desc).includes(q)||norm(r.marca).includes(q)||norm(r.pedidoPdv).includes(q)||norm(r.pedido).includes(q)||norm(r.bloqueioDetalhe).includes(q))
- );
-}
-function render(){
- const f=filtrados(); fCount.textContent=f.length; fTotal.textContent=fmtN(f.reduce((s,r)=>s+(r.sugerida||0),0));
- tbody.innerHTML=f.length?f.slice(0,3000).map(r=>`<tr>
-  <td class="p-2 mono">${esc(r.cod)}</td><td class="p-2">${esc(r.desc)}</td><td class="p-2 mut">${esc(r.marca)}</td><td class="p-2 text-center" style="${r.saldo<=0?"color:#c20312":""}">${fmtN(r.saldo)}</td>
-  <td class="p-2">${BADGE[r.status]}</td><td class="p-2 mono text-center">${esc(r.pedidoPdv)}</td><td class="p-2 mono">${esc(r.pedido)}</td>
-  <td class="p-2">${r.bloqueado?`<span class="pill" title="${esc(r.bloqueioDetalhe)}" style="background:rgba(227,6,19,.14);color:#b91c1c">🔒 Bloqueado</span><div class="text-[11px] font-medium mt-0.5" style="color:#b91c1c">${esc(r.bloqueioDetalhe)}</div>`:""}</td>
-  <td class="p-2 text-right">${r.qtdComprada===""?"":fmtN(r.qtdComprada)}</td>
-  <td class="p-2 text-right font-semibold">${r.sugerida==null?"":fmtN(r.sugerida)}</td><td class="p-2">${fmtD(r.previsao)}</td><td class="p-2 mut">${ACAO[r.status]}</td></tr>`).join("")
-  +(f.length>3000?`<tr><td colspan="12" class="p-3 text-center mut">Mostrando 3.000 de ${f.length} linhas. A exportação inclui todas.</td></tr>`:"")
-  :'<tr><td colspan="12" class="p-6 text-center mut">Nenhum item encontrado.</td></tr>';
-}
-function setFiltro(f){ filtro=f; document.querySelectorAll("[data-f]").forEach(b=>b.classList.toggle("active",b.dataset.f===f)); render(); }
-document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>setFiltro(b.dataset.f));
-busca.oninput=render; fMarca.onchange=render; fBloq.onchange=render;
-
-function baixar(linhas,nome,aba){ const ws=XLSX.utils.json_to_sheet(linhas); ws["!cols"]=Object.keys(linhas[0]).map(()=>({wch:20}));
- const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,aba);
- XLSX.writeFile(wb,`${nome}_${new Date().toISOString().slice(0,10)}.xlsx`); }
-function exportarFiltro(){ const f=filtrados(); if(!f.length) return alert("Nada para exportar.");
- baixar(f.map(r=>({"Código":r.cod,"Descrição":r.desc,"Marca":r.marca,"Saldo Atual":r.saldo,"Demanda":r.demanda,"Status":STXT[r.status],
-  "Pedido de Venda (PDV)":r.pedidoPdv,"Pedido de Compra (PC)":r.pedido,"Bloqueado":r.bloqueado?"SIM":"NÃO","Detalhe Bloqueio":r.bloqueioDetalhe,
-  "Qtd. Comprada":r.qtdComprada,"Qtd. Sugerida Compra":r.sugerida??"","Previsão de Entrega":r.previsao||"","Ação":ACAO[r.status]})),"Analise_Estoque","Análise"); }
-function enviarCompras(){ const f=filtrados().filter(r=>r.status==="CRITICO"); if(!f.length) return alert("Não há itens Críticos no filtro atual.");
- baixar(f.map(r=>({"Código":r.cod,"Descrição":r.desc,"Marca":r.marca,"Saldo":r.saldo,"Demanda":r.demanda,
-  "Pedido de Venda (PDV)":r.pedidoPdv,"Bloqueado":r.bloqueado?"SIM":"NÃO","Detalhe Bloqueio":r.bloqueioDetalhe,"Qtd. Sugerida Compra":r.sugerida})),"Solicitacao_Compras","Comprar Urgente"); }
-
-function compartilhar(){
- const snap={geradoEm:new Date().toLocaleString("pt-BR"),arquivos:[data.p1?.file,data.p2?.file],excl:+(info.textContent.match(/^\d+/)||[0])[0],
-  rows:rows.map(r=>({...r,previsao:r.previsao?r.previsao.toISOString():null}))};
- const js="window.SNAPSHOT="+JSON.stringify(snap).replace(/</g,"\\u003c")+";";
- let html="<!DOCTYPE html>\n"+TEMPLATE.replace("window.SNAPSHOT=null;",js);
- html=html.replace(/<style>[^<]*\*, ::before, ::after[\s\S]*?<\/style>/,"");
- const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([html],{type:"text/html"}));
- a.download=`Visualizador_Estoque_${new Date().toISOString().slice(0,10)}.html`; a.click();
-}
-
-function aplicarSnapshot(s, permitirAtualizarUrl=false){
- document.getElementById("upSec")?.remove();
-document.getElementById("btnCross")?.remove();
- viewBanner.classList.remove("hidden");
- viewBanner.innerHTML=`<b>Visualizador atualizado</b> · dados gerados em ${esc(s.geradoEm||"")} a partir de ${esc((s.arquivos||[]).filter(Boolean).join(" e ")||"dados.json")}. Salve esta URL nos Favoritos para sempre ver a versão mais recente.`;
- rows=(s.rows||[]).map(r=>({...r,previsao:r.previsao?new Date(r.previsao):null}));
- finalizar(s.excl||0, false);
- btnShare.remove();
- if(permitirAtualizarUrl) btnSyncUrl.classList.remove("hidden");
-}
-
-async function atualizarRemoto(){
- try{
-  const resp = await fetch(`${DADOS_JSON_URL}?t=${Date.now()}`, {cache:"no-store"});
-  if(!resp.ok) throw new Error("dados.json não encontrado");
-  const s = await resp.json();
-  aplicarSnapshot(s, true);
- }catch(err){
-  alert("Não foi possível atualizar dados.json: " + err.message);
- }
-}
-
-(async function init(){
- if(window.SNAPSHOT){
-  aplicarSnapshot(window.SNAPSHOT, false);
-  return;
- }
- if(location.protocol === "http:" || location.protocol === "https:"){
-  try{
-   const resp = await fetch(`${DADOS_JSON_URL}?t=${Date.now()}`, {cache:"no-store"});
-   if(resp.ok){
-    const s = await resp.json();
-    aplicarSnapshot(s, true);
-    return;
-   }
-  }catch(_){}
- }
- carregarEstadoLocal();
-})();
-</script>
-</body>
-</html>
+<div id="reqModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4 no-print">
+  <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-3xl w-full max-h-[85vh] flex flex-col">
+    <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between">
+      <div>
+        <h3 class="font-bold text-base text-slate-900">Prévia de Requisição de Compra</h3>
+        <p id="reqSub" class="text-xs text-slate-500"></p>
+      </div>
